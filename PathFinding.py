@@ -106,9 +106,8 @@ def djakartas(reached, validNeighbours, graph, dist, startR, startC):
 			return reached
 
 # start
-def main():
+def run(graph):
 	reached = False
-	graph = setup()
 	
 	# Get index for sources
 	startR, startC = findSource(graph)
@@ -143,5 +142,3 @@ def main():
 						print(str(list[i][0]) + "," + str(list[i][1]))
 			else:
 				print("No path")
-
-main()
