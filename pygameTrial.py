@@ -11,7 +11,7 @@
 from utils import drawRect
 import pygame
 from constants import *
-from PathFinding import run
+from PathFinding import Graph, Queue
 
 # Initialize pygame
 pygame.init()
@@ -24,12 +24,8 @@ Create a 2 dimensional array. A two dimensional
 array is simply a list of lists.
 Set grid value
 '''
-grid = []
-for row in range(ROW):
-    grid.append([])
-    for column in range(COL):
-        grid[row].append(1)  
- 
+grid = Graph(ROW, COL)
+
 screen = pygame.display.set_mode(WINDOW_SIZE)
  
 # Set title of screen
@@ -41,18 +37,57 @@ done = False
 # Used to manage how fast the screen updates
 clock = pygame.time.Clock()
 
+def run(graph: Graph):
+    #qeue to hold list of nodes to check 
+    nodes_check = Queue()
+
+    source = graph.getSource()
+    source.setVisited()
+    destination = graph.getDestination()
+    nodes_check.insert(source)
+    reached = False
+
+    # Dijkarta's Algo
+    while nodes_check.length() != 0:
+        cur_node = nodes_check.pop()
+        neighbours = cur_node.findNeighbours(graph.getGraph())
+
+        for each in neighbours:
+            if each == destination:
+                reached = True
+                each.setPrev(cur_node)
+                break
+            each.setPrev(cur_node)
+            each.setVisited()
+            each.setDist(cur_node.getDist() + 1)
+            nodes_check.insert(each)
+        drawGrid()
+        pygame.display.flip()
+        clock.tick(60)
+        if reached:
+            break
+    return reached 
+
 def drawGrid():
     # Draw the grid
     for row in range(ROW):
         for column in range(COL):
-            color = WHITE
-            val = grid[row][column]
-            if val == 0:
-                color = GREEN
-            elif val == -1:
-                color = BLACK
-            elif val == 9:
-                color = RED
+            val = grid.getDist(row, column)
+            type = grid.getType(row, column)
+            inShort = grid.getInShort(row, column)
+            if not inShort:
+                if type == None and val == INFITY:
+                    color = WHITE
+                elif  type == "Wall":
+                    color = BLACK
+                elif type == "Destination":
+                    color = RED
+                elif type == "Source":
+                    color = GREEN
+                else:
+                    color = BLUE
+            else:
+                color = MAIN_PATH
             drawRect(screen, color, (MARGIN + WIDTH) * column + MARGIN, (MARGIN + HEIGHT) * row + MARGIN, WIDTH, HEIGHT)
 
 def drawButtons():
@@ -91,37 +126,42 @@ while not done:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             # User clicks the mouse. Get the position
             pos = pygame.mouse.get_pos()
+
             # Change the x/y screen coordinates to grid coordinates
-            column = pos[0] // (WIDTH + MARGIN)
-            row = pos[1] // (HEIGHT + MARGIN)
+            column = int(pos[0] // (WIDTH + MARGIN))
+            row = int(pos[1] // (HEIGHT + MARGIN))
 
             # If in grid
-            if row <= ROW-1 and column <= COL-1:
-                gridVal = grid[row][column]
-                
+            if row <= int(ROW-1) and column <= int(COL-1):
+                gridVal = grid.getDist(row,column)
+                gridType = grid.getType(row, column)
                 # Handles start button and grid events
                 if current == "Start":
-                    if gridVal == 0 and setStart:
-                        grid[row][column] = wordToNumber["Open"]
-                        setStart = False
-                    elif gridVal == 1 and not setStart:
-                        grid[row][column] = wordToNumber[current]
-                        setStart = True
+                    if gridVal == 0 and grid.getSource() != None:
+                        grid.setDist(row,column, wordToNumber["Open"]) 
+                        grid.resetSource()
+                        grid.setType(row, column, None)
+                    elif gridVal == INFITY and grid.getSource() == None:
+                        grid.setDist(row,column, wordToNumber[current])
+                        grid.setSource(row, column)
+                        grid.setType(row, column, "Source")
                 # Handles destination button and grid events
                 elif current == "Destination":
-                    if gridVal == 9 and setDestination:
-                        grid[row][column] = wordToNumber["Open"]
-                        setDestination = False
-                    elif gridVal == 1 and not setDestination:
-                        grid[row][column] = wordToNumber[current]
-                        setDestination = True
-
-                # Handles other button and grid events
-                else:
-                    if gridVal == wordToNumber[current]:
-                        grid[row][column] = wordToNumber["Open"]
-                    else:   
-                        grid[row][column] = wordToNumber[current]
+                    if gridType == "Destination" and grid.getDestination() != None:
+                        grid.resetDestination()
+                        grid.setDist(row,column, wordToNumber["Open"]) 
+                        grid.setType(row, column, None)                    
+                    elif gridVal == INFITY and grid.getDestination() == None:
+                        grid.setDestination(row, column)
+                        grid.setType(row, column, "Destination")
+                # Handles wall grid events
+                elif current == "Wall":
+                    if gridVal == -1:
+                        grid.setDist(row,column,wordToNumber["Open"])
+                        grid.setType(row, column, None)
+                    elif gridVal == INFITY:
+                        grid.setDist(row,column, wordToNumber[current])
+                        grid.setType(row, column, "Wall")
             # For buttons
             else:
                 ver = (pos[1]) // (BUTTON_H + BUTTON_VER)
@@ -129,15 +169,22 @@ while not done:
                     current = buttonList[ver]
                 elif ver == 3:
                     print("Runing Algo")
-                    run(grid)
+                    found = run(grid)
+                    if found:
+                        grid.setPath()
+                    else:
+                        print("No Path Found")
                 elif ver == 4:
                     print("Reset")
             
     screen.fill(BACKGRUOND)
+
     drawGrid()
     drawButtons()
+    
     # Limit to 60 frames per second
     clock.tick(60)
+
     # Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
 

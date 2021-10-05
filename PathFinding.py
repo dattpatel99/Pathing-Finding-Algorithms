@@ -1,144 +1,147 @@
-import copy
 
-# update distances
+from time import sleep
+from constants import INFITY, ROW_COMB, COL_COMB, ROW, COL
 '''
-Update the Distance between neighbours using the sources preious array and sources location
-If destination value found then return True else False
+Node class to hold each cells data
 '''
-def updateDis(graph,neigh,dist,startR,startC):
-	for each in neigh:
-		r, c = int(each[0]), int(each[1])
-		nodeInfo = dist[str(r)+str(c)]
-		if nodeInfo["weight"] == None and nodeInfo["prev"] == None:
-			nodeInfo["prev"] = copy.deepcopy(dist[str(startR)+str(startC)]["prev"])
-			nodeInfo["prev"].append([startR, startC])
-			nodeInfo["weight"] = len(nodeInfo["prev"])
-		if graph[r][c] == 9:
-			return True
-	return False
-
-# Get neighbours
-'''
-'''
-def getNeighbours(graph, dist, numR, numC):
-	maxRow = len(graph)
-	maxCol = len(graph[0])
-	neighs = []
-	try:
-		# Below
-		if numR-1>=0 and dist[str(numR-1)+str(numC)]["weight"] == None:
-			neighs.append(str(numR-1)+ str(numC))
-	except KeyError as err:
-		pass
-	try:
-		# Above
-		if numR+1<maxRow and dist[str(numR+1)+str(numC)]["weight"] == None:
-			neighs.append(str(numR+1)+str(numC))
-	except KeyError as err:
-		pass
-	try:
-		# Left
-		if numC-1>=0 and dist[str(numR)+str(numC-1)]["weight"] == None:
-			neighs.append(str(numR)+str(numC-1))
-	except KeyError as err:
-		pass
-	try:
-		# Right
-		if numC+1<maxCol and dist[str(numR)+str(numC+1)]["weight"] == None:
-			neighs.append(str(numR)+str(numC+1))
-	except KeyError as err:
-		pass
-	return neighs
-
-# Find the source coords
-'''
-'''
-def findSource(graph):
-	for i in range(len(graph)):
-		for j in range(len(graph[0])):
-			val = graph[i][j]
-			if val == 0:
-				return i,j
-			elif val != 1 and val != -1 and val != 9:
-				return -1,-1 
-	return -1,-1
-
-#set up Distance
-'''
-'''
-def setupDistance(graph):
-	dist = {}
-	final = False
-	dest = [-1,-1]
-	for i in range(len(graph)):
-		for j in range(len(graph[0])):
-			val = graph[i][j]
-			if val == 0:
-				dist[str(i) + str(j)] = {'weight': 0, 'prev': []}
-			elif val == 1 or val == 9:
-				dist[str(i) + str(j)] = {'weight': None, 'prev': None} 
-			if val == 9:
-				final = True
-				dest[0] = i
-				dest[1] = j
-	if final:
-		return dist, dest
-	return None, None
-
-# setup the graph
-'''
-'''
-def setup():
-	b = [[1,0,1,-1,1], [1,1,-1,1,9], [-1,1,1,1,-1]]
-	return b
-
-# recursive
-'''
-'''
-def djakartas(reached, validNeighbours, graph, dist, startR, startC):
-	if reached or len(validNeighbours) == 0:
-		return reached
-	for each in validNeighbours:
-		newNeigh = getNeighbours(graph, dist, int(each[0]), int(each[1]))
-		reached = updateDis(graph, newNeigh, dist, int(each[0]), int(each[1]))
-		reached = djakartas(reached, newNeigh, graph, dist, int(each[0]), int(each[1]))
-		if reached:
-			return reached
-
-# start
-def run(graph):
-	reached = False
+class Node():
 	
-	# Get index for sources
-	startR, startC = findSource(graph)
+	def __init__(self,posx: int,posy: int, value: int):
+		self.x = posx
+		self.y = posy
+		self.dist = value
+		self.visited = False
+		self.previousNode = None
+		self.type = None
+		self.inShort = False
 	
-	# if no source end
-	if startR == -1 and startC == -1:
-		print("Invalid Graph recheck")
-	else:
-		# Setup all distance to infitiny and return final blocks indices else end
-		dist, destFinal = setupDistance(graph)
-		if dist == None:
-			print("Error, no final destination.")
-		else:
-			# update dist for source block
-			dist[str(startR)+str(startC)]["prev"] = [] 
-			dist[str(startR)+str(startC)]["weight"] = len(dist[str(startR)+str(startC)]["prev"])
-			
-			# Run first with source block as start
-			validNeighbours = getNeighbours(graph, dist, startR, startC)
-			reached = updateDis(graph, validNeighbours, dist, startR, startC)
-			
-			# Run recursive loop with rest
-			reached = djakartas(reached, validNeighbours, graph, dist, startR, startC)
-			
-			# Print path
-			if reached:
-				list = dist[str(destFinal[0])+str(destFinal[1])]["prev"]
-				for i in range(0, len(list)):
-					if i != len(list)-1:
-						print(str(list[i][0]) + "," + str(list[i][1]) + " ->", end =" ")
-					else:
-						print(str(list[i][0]) + "," + str(list[i][1]))
+	# Setters
+	def setType(self, newType):
+		self.type = newType
+
+	def setVisited(self):
+		self.visited = True
+
+	def setDist(self, val: int):
+		self.dist = val
+	
+	def setPrev(self, prev):
+		self.previousNode = prev
+	
+	def setInShort(self):
+		self.inShort = True
+
+	# Getters
+
+	def getType(self):
+		return self.type
+
+	def getVisited(self) -> bool:
+		return self.visited
+	
+	def getDist(self)-> int:
+		return self.dist
+
+	def getPrev(self):
+		return self.previousNode
+	
+	def getInShort(self):
+		return self.inShort
+
+	def getPosition(self) -> str:
+		return "(" + str(self.x) + "," + str(self.y) + ")"
+
+	# Behaviors
+	def findNeighbours(self, graph: list) -> list:
+		neighbours = []
+		for i in range(len(ROW_COMB)):
+			x_value = self.x + ROW_COMB[i]
+			y_value = self.y + COL_COMB[i]
+			if (x_value < 0 or x_value >= ROW) or (y_value < 0 or y_value >= COL):
+				pass
 			else:
-				print("No path")
+				possible_neigh = graph[x_value][y_value]
+				if possible_neigh.getType() != "Wall" and possible_neigh.getVisited() != True:
+					neighbours.append(possible_neigh)
+		return neighbours
+
+'''
+Graph class for all grid related things
+'''
+class Graph():
+
+	def __init__(self, row, cols):
+		self._graph = self._initializeNodes(row, cols)
+		self.source = None
+		self.destination = None
+
+	# Initialize as nodes
+	def _initializeNodes(self, row, col):
+		grid = []
+		for i in range(row):
+			temp = []
+			for j in range(col):
+				temp.append(Node(i, j, INFITY))
+			grid.append(temp)
+		return grid
+	
+	# Setters
+	def setSource(self, row: int, col: int):
+		self.source = (self.getGraph()[row][col])
+	
+	def setDestination(self, row: int, col: int):
+		self.destination = (self.getGraph()[row][col])
+	
+	def setDist(self, row, col, val):
+		(self.getGraph()[row][col]).setDist(val)
+
+	def setType(self, row, col, type):
+		(self.getGraph()[row][col]).setType(type)
+
+	# Getters
+	def getSource(self) -> Node:
+		return self.source
+	
+	def getDestination(self) -> Node:
+		return self.destination
+
+	def getGraph(self):
+		return self._graph
+
+	def getDist(self, row, col) -> int:
+		return (self.getGraph()[row][col]).getDist()
+	
+	def getType(self, row, col) -> int:
+		return (self.getGraph()[row][col]).getType()
+
+	def getInShort(self, row, col):
+		return (self.getGraph()[row][col]).getInShort()
+
+	# ReSetters
+	def resetSource(self):
+		self.source = None
+	
+	def resetDestination(self):
+		self.destination = None
+
+	def setPath(self):
+		prev = self.getDestination().getPrev()
+		while prev != None:
+			if prev.getType() != "Source":
+				prev.setInShort()
+			prev = prev.getPrev()
+
+class Queue():
+	def __init__ (self):
+		self.queue = []
+	
+	def insert(self, item: Node):
+		self.queue = [item] + self.queue
+	
+	def pop(self) -> Node:
+		item = self.queue[-1]
+		self.queue = self.queue[:-1]
+		return item
+	
+	def length(self):
+		return len(self.queue)
