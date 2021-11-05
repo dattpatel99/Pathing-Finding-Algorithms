@@ -25,7 +25,6 @@ array is simply a list of lists.
 Set grid value
 '''
 grid = Graph(ROW, COL)
-
 screen = pygame.display.set_mode(WINDOW_SIZE)
  
 # Set title of screen
@@ -51,7 +50,6 @@ def run(graph: Graph):
     while nodes_check.length() != 0:
         cur_node = nodes_check.pop()
         neighbours = cur_node.findNeighbours(graph.getGraph())
-
         for each in neighbours:
             if each == destination:
                 reached = True
@@ -93,7 +91,6 @@ def drawGrid():
 def drawButtons():
     horPos = (MARGIN + WIDTH) * COL + MARGIN + BUTTON_HOR
     verPos = BUTTON_VER
- 
     butColor = BUTTON_COLOR
     textColor = TEXT_COLOR
     
@@ -104,7 +101,6 @@ def drawButtons():
         else:
             butColor = BUTTON_COLOR
             textColor = TEXT_COLOR
-
         drawRect(screen, butColor, horPos, verPos, BUTTON_W, BUTTON_H)
         text = FONT.render(buttonList[i] , True , textColor)
         screen.blit(text , (horPos,verPos + 10))
@@ -178,10 +174,8 @@ while not done:
                     print("Reset")
             
     screen.fill(BACKGRUOND)
-
     drawGrid()
     drawButtons()
-    
     # Limit to 60 frames per second
     clock.tick(60)
 

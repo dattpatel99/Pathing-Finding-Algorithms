@@ -5,7 +5,6 @@ from constants import INFITY, ROW_COMB, COL_COMB, ROW, COL
 Node class to hold each cells data
 '''
 class Node():
-	
 	def __init__(self,posx: int,posy: int, value: int):
 		self.x = posx
 		self.y = posy
@@ -13,44 +12,34 @@ class Node():
 		self.visited = False
 		self.previousNode = None
 		self.type = None
-		self.inShort = False
+		self.inShort = False	
 	
 	# Setters
 	def setType(self, newType):
 		self.type = newType
-
 	def setVisited(self):
 		self.visited = True
-
 	def setDist(self, val: int):
-		self.dist = val
-	
+		self.dist = val	
 	def setPrev(self, prev):
 		self.previousNode = prev
-	
 	def setInShort(self):
 		self.inShort = True
-
+	
 	# Getters
-
 	def getType(self):
 		return self.type
-
 	def getVisited(self) -> bool:
 		return self.visited
-	
 	def getDist(self)-> int:
 		return self.dist
-
 	def getPrev(self):
 		return self.previousNode
-	
 	def getInShort(self):
 		return self.inShort
-
 	def getPosition(self) -> str:
 		return "(" + str(self.x) + "," + str(self.y) + ")"
-
+	
 	# Behaviors
 	def findNeighbours(self, graph: list) -> list:
 		neighbours = []
@@ -65,11 +54,8 @@ class Node():
 					neighbours.append(possible_neigh)
 		return neighbours
 
-'''
-Graph class for all grid related things
-'''
+'''Graph class for all grid related things'''
 class Graph():
-
 	def __init__(self, row, cols):
 		self._graph = self._initializeNodes(row, cols)
 		self.source = None
@@ -87,43 +73,35 @@ class Graph():
 	
 	# Setters
 	def setSource(self, row: int, col: int):
-		self.source = (self.getGraph()[row][col])
-	
+		self.source = (self.getGraph()[row][col])	
 	def setDestination(self, row: int, col: int):
 		self.destination = (self.getGraph()[row][col])
-	
 	def setDist(self, row, col, val):
 		(self.getGraph()[row][col]).setDist(val)
-
 	def setType(self, row, col, type):
 		(self.getGraph()[row][col]).setType(type)
 
 	# Getters
 	def getSource(self) -> Node:
 		return self.source
-	
 	def getDestination(self) -> Node:
 		return self.destination
-
 	def getGraph(self):
 		return self._graph
-
 	def getDist(self, row, col) -> int:
 		return (self.getGraph()[row][col]).getDist()
-	
 	def getType(self, row, col) -> int:
 		return (self.getGraph()[row][col]).getType()
-
 	def getInShort(self, row, col):
 		return (self.getGraph()[row][col]).getInShort()
 
 	# ReSetters
 	def resetSource(self):
 		self.source = None
-	
 	def resetDestination(self):
 		self.destination = None
 
+	# Set nodes which are in shortest as True	
 	def setPath(self):
 		prev = self.getDestination().getPrev()
 		while prev != None:
@@ -131,17 +109,15 @@ class Graph():
 				prev.setInShort()
 			prev = prev.getPrev()
 
+# Personal Queue class for easier queue management
 class Queue():
 	def __init__ (self):
 		self.queue = []
-	
 	def insert(self, item: Node):
 		self.queue = [item] + self.queue
-	
 	def pop(self) -> Node:
 		item = self.queue[-1]
 		self.queue = self.queue[:-1]
 		return item
-	
 	def length(self):
 		return len(self.queue)
