@@ -13,6 +13,20 @@ class Node():
 		self.previousNode = None
 		self.type = None
 		self.inShort = False	
+
+	# Reset the node attributes
+	def reset(self):
+		self.dist = INFITY
+		self.visited = False
+		self.previousNode = None
+		self.type = None
+		self.inShort = None
+	
+	def resetReRun(self):
+		self.dist = INFITY
+		self.visited = False
+		self.previousNode = None
+		self.inShort = None
 	
 	# Setters
 	def setType(self, newType):
@@ -108,6 +122,18 @@ class Graph():
 			if prev.getType() != "Source":
 				prev.setInShort()
 			prev = prev.getPrev()
+	
+	def resetAll(self):
+		self.resetSource()
+		self.resetDestination()
+		for row in self._graph:
+			for eachNode in row:
+				eachNode.reset()
+	
+	def resetForReRun(self):
+		for row in self._graph:
+			for eachNode in row:
+				eachNode.resetReRun()
 
 # Personal Queue class for easier queue management
 class Queue():

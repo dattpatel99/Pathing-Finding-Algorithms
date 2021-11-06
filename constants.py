@@ -44,3 +44,4 @@ SELECTED = BLUE
 
 #HEIGHT and WIDTH of the Screen
 WINDOW_SIZE = [600, 500] 
+POPUP_SIZE = [300, 250] 
