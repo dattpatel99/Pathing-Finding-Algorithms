@@ -24,6 +24,8 @@ ALERT_MESSAGE = None
 pygame.init()
 FONT = pygame.font.SysFont('Corbel',30)
 
+# Drag value
+drag = False
 setStart = False
 setDestination = False 
 grid = Graph(ROW, COL)
@@ -76,7 +78,6 @@ def handleRunResult(grid: Graph, result):
         grid.setPath
     else: 
         Tk().wm_withdraw()
-        print(ALERT_MESSAGE)
         messagebox.showinfo("Alert Message", ALERT_MESSAGE)
         
 def drawGrid():
@@ -127,6 +128,13 @@ def drawButtons():
     text = FONT.render('Run Dijsktra\'s' , True , TEXT_COLOR)
     screen.blit(text, (horPos,verPos+10))
 
+    # Clear Walls Program
+    verPos += (BUTTON_VER + BUTTON_H)
+    drawRect(screen, BUTTON_COLOR, horPos, verPos, BUTTON_W, BUTTON_H)
+    
+    text = FONT.render('Clear Walls' , True , TEXT_COLOR)
+    screen.blit(text, (horPos,verPos+10))
+
     # For Reset Program
     verPos += (BUTTON_VER + BUTTON_H)
     drawRect(screen, BUTTON_COLOR, horPos, verPos, BUTTON_W, BUTTON_H)
@@ -134,8 +142,32 @@ def drawButtons():
     text = FONT.render('Reset Program' , True , TEXT_COLOR)
     screen.blit(text, (horPos,verPos+10))
 
-# Drag value
-drag = False
+def handleWalls(gridType, gridVal):
+    if gridVal == -1 and gridType == "Wall":
+        grid.setDist(row,column,wordToNumber["Open"])
+        grid.setType(row, column, None)
+    elif gridVal == INFITY and gridType == None:
+        grid.setDist(row,column, wordToNumber[current])
+        grid.setType(row, column, "Wall")
+
+def handleDestination(gridType, gridVal):
+    if gridType == "Destination" and grid.getDestination() != None:
+        grid.resetDestination()
+        grid.setDist(row,column, wordToNumber["Open"]) 
+        grid.setType(row, column, None)                    
+    elif gridVal == INFITY and grid.getDestination() == None:
+        grid.setDestination(row, column)
+        grid.setType(row, column, "Destination")
+
+def handleStart(gridVal):
+    if gridVal == 0 and grid.getSource() != None:
+        grid.setDist(row,column, wordToNumber["Open"]) 
+        grid.resetSource()
+        grid.setType(row, column, None)
+    elif gridVal == INFITY and grid.getSource() == None:
+        grid.setDist(row,column, wordToNumber[current])
+        grid.setSource(row, column)
+        grid.setType(row, column, "Source")
 
 # -------- Main Program Loop -----------
 while not done:
@@ -154,35 +186,16 @@ while not done:
             if row <= int(ROW-1) and column <= int(COL-1):
                 gridVal = grid.getDist(row,column)
                 gridType = grid.getType(row, column)
-
                 # Handles start button and grid events
                 if current == "Start":
-                    if gridVal == 0 and grid.getSource() != None:
-                        grid.setDist(row,column, wordToNumber["Open"]) 
-                        grid.resetSource()
-                        grid.setType(row, column, None)
-                    elif gridVal == INFITY and grid.getSource() == None:
-                        grid.setDist(row,column, wordToNumber[current])
-                        grid.setSource(row, column)
-                        grid.setType(row, column, "Source")
+                    handleStart(gridVal)
                 # Handles destination button and grid events
                 elif current == "Destination":
-                    if gridType == "Destination" and grid.getDestination() != None:
-                        grid.resetDestination()
-                        grid.setDist(row,column, wordToNumber["Open"]) 
-                        grid.setType(row, column, None)                    
-                    elif gridVal == INFITY and grid.getDestination() == None:
-                        grid.setDestination(row, column)
-                        grid.setType(row, column, "Destination")
+                   handleDestination(gridType, gridVal)
                 # Handles wall grid events
                 elif current == "Wall":
                     drag = True
-                    if gridVal == -1:
-                        grid.setDist(row,column,wordToNumber["Open"])
-                        grid.setType(row, column, None)
-                    elif gridVal == INFITY:
-                        grid.setDist(row,column, wordToNumber[current])
-                        grid.setType(row, column, "Wall")
+                    handleWalls(gridType, gridVal)
             # For buttons
             else:
                 ver = (pos[1]) // (BUTTON_H + BUTTON_VER)
@@ -196,9 +209,11 @@ while not done:
                             grid.setPath() 
                         elif found == False:
                             ALERT_MESSAGE = "No Path Found"
+                        handleRunResult(grid, found)
                     elif ver == 4:
+                        grid.clearWalls()
+                    elif ver == 5:
                         grid.resetAll()
-                    handleRunResult(grid, found)
         elif event.type == pygame.MOUSEBUTTONUP:
             if current == "Wall":
                 drag = False
@@ -207,12 +222,7 @@ while not done:
                 if row <= int(ROW-1) and column <= int(COL-1):
                     gridVal = grid.getDist(row,column)
                     gridType = grid.getType(row, column)
-                    if gridVal == -1:
-                        grid.setDist(row,column,wordToNumber["Open"])
-                        grid.setType(row, column, None)
-                    elif gridVal == INFITY:
-                        grid.setDist(row,column, wordToNumber[current])
-                        grid.setType(row, column, "Wall")
+                    handleWalls(gridType, gridVal)
             
     screen.fill(BACKGRUOND)
     drawGrid()

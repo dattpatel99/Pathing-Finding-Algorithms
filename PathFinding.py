@@ -22,6 +22,7 @@ class Node():
 		self.type = None
 		self.inShort = None
 	
+	# Reset for rerun
 	def resetReRun(self):
 		self.dist = INFITY
 		self.visited = False
@@ -129,6 +130,12 @@ class Graph():
 		for row in self._graph:
 			for eachNode in row:
 				eachNode.reset()
+	
+	def clearWalls(self):
+		for row in self._graph:
+			for eachNode in row:
+				if eachNode.getType() == "Wall":
+					eachNode.reset()
 	
 	def resetForReRun(self):
 		for row in self._graph:
