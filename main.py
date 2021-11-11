@@ -134,23 +134,27 @@ def drawButtons():
     text = FONT.render('Reset Program' , True , TEXT_COLOR)
     screen.blit(text, (horPos,verPos+10))
 
+# Drag value
+drag = False
+
 # -------- Main Program Loop -----------
 while not done:
     for event in pygame.event.get():  # User did something
+        # User clicks the mouse. Get the position
+        pos = pygame.mouse.get_pos()
+
+        # Change the x/y screen coordinates to grid coordinates
+        column = int(pos[0] // (WIDTH + MARGIN))
+        row = int(pos[1] // (HEIGHT + MARGIN))
+
         if event.type == pygame.QUIT:  # If user clicked close
             done = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            # User clicks the mouse. Get the position
-            pos = pygame.mouse.get_pos()
-
-            # Change the x/y screen coordinates to grid coordinates
-            column = int(pos[0] // (WIDTH + MARGIN))
-            row = int(pos[1] // (HEIGHT + MARGIN))
-
             # If in grid
             if row <= int(ROW-1) and column <= int(COL-1):
                 gridVal = grid.getDist(row,column)
                 gridType = grid.getType(row, column)
+
                 # Handles start button and grid events
                 if current == "Start":
                     if gridVal == 0 and grid.getSource() != None:
@@ -172,6 +176,7 @@ while not done:
                         grid.setType(row, column, "Destination")
                 # Handles wall grid events
                 elif current == "Wall":
+                    drag = True
                     if gridVal == -1:
                         grid.setDist(row,column,wordToNumber["Open"])
                         grid.setType(row, column, None)
@@ -194,7 +199,20 @@ while not done:
                     elif ver == 4:
                         grid.resetAll()
                     handleRunResult(grid, found)
-                
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if current == "Wall":
+                drag = False
+        elif event.type == pygame.MOUSEMOTION:
+            if drag and current == "Wall":
+                if row <= int(ROW-1) and column <= int(COL-1):
+                    gridVal = grid.getDist(row,column)
+                    gridType = grid.getType(row, column)
+                    if gridVal == -1:
+                        grid.setDist(row,column,wordToNumber["Open"])
+                        grid.setType(row, column, None)
+                    elif gridVal == INFITY:
+                        grid.setDist(row,column, wordToNumber[current])
+                        grid.setType(row, column, "Wall")
             
     screen.fill(BACKGRUOND)
     drawGrid()
