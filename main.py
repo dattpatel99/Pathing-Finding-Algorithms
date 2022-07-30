@@ -44,12 +44,15 @@ def run(graph: Graph):
     #qeue to hold list of nodes to check 
     nodes_check = Queue()
     source = graph.getSource()
+    # Check for source block
     if source == None:
         return None, "No Source set"
     source.setVisited()
+    # Check for destination
     destination = graph.getDestination()
     if destination == None:
         return None, "No Destination set"
+    
     nodes_check.insert(source)
     reached = False
 
