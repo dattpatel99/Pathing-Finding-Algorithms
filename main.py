@@ -8,7 +8,9 @@
  
  Explanation video: http://youtu.be/mdTeqiWyFnc
 """
-from utils import drawRect
+from utils import drawRect, aStarInsertionSort
+from util_astar import initiateAStarSource as initAStarSource
+from util_astar import caluclateF,caluclateG, caluclateH
 import pygame
 
 from tkinter import *
@@ -40,7 +42,59 @@ done = False
 # Used to manage how fast the screen updates
 clock = pygame.time.Clock()
 
-def run(graph: Graph):
+def runAStar(graph: Graph):
+    open_list = list
+    source = graph.getSource()
+    # Check for source block
+    if source == None:
+        return None, "No Source set"
+    source.setVisited()
+    # Check for destination
+    destination = graph.getDestination()
+    if destination == None:
+        return None, "No Destination set"
+
+    # Init the source block values    
+    initAStarSource(source)
+    open_list.insert(source)
+    reached = False
+
+    # Algo loop
+    while open_list.length() != 0:
+        cur_node = open_list.pop(0)
+        neigh = cur_node.findNeighbours(graph)
+        cur_node.setVisited()
+        for each in neigh:
+            if each == destination:
+                reached = True
+                each.setPrev(cur_node)
+                break
+            else:
+                gNew = caluclateG(cur_node.getG())
+                hNew = caluclateH(each, destination)
+                fNew = caluclateF(gNew,hNew)
+                if (each not in open_list):
+                    open_list = aStarInsertionSort(open_list, each)
+                    each.setPrev(cur_node)
+                    each.setG(gNew)
+                    each.setH(hNew)
+                    each.setF(fNew)
+                else:
+                    if (fNew < each.getF()):
+                        each.setPrev(cur_node)
+                        each.setG(gNew)
+                        each.setH(hNew)
+                        each.setF(fNew)
+                        each.setF(fNew)
+        # Show progress
+        drawGrid()
+        pygame.display.flip()
+        clock.tick(60)
+        if reached:
+            break
+    return reached, "Path Found"
+
+def runDj(graph: Graph):
     #qeue to hold list of nodes to check 
     nodes_check = Queue()
     source = graph.getSource()
@@ -52,7 +106,10 @@ def run(graph: Graph):
     destination = graph.getDestination()
     if destination == None:
         return None, "No Destination set"
-    
+
+    '''
+    This section is DK if possible move to a different function
+    '''    
     nodes_check.insert(source)
     reached = False
 
@@ -69,6 +126,7 @@ def run(graph: Graph):
             each.setVisited()
             each.setDist(cur_node.getDist() + 1)
             nodes_check.insert(each)
+        # Show progress
         drawGrid()
         pygame.display.flip()
         clock.tick(60)
@@ -124,11 +182,18 @@ def drawButtons():
         if i != len(buttonList)-1:
             verPos += (BUTTON_VER + BUTTON_H)
     
-    # For Running Algorithm
+    # For Running DJK Algorithm
     verPos += (BUTTON_VER + BUTTON_H)
     drawRect(screen, BUTTON_COLOR, horPos, verPos, BUTTON_W, BUTTON_H)
     
     text = FONT.render('Run Dijsktra\'s' , True , TEXT_COLOR)
+    screen.blit(text, (horPos,verPos+10))
+
+    # For Running A Start
+    verPos += (BUTTON_VER + BUTTON_H)
+    drawRect(screen, BUTTON_COLOR, horPos, verPos, BUTTON_W, BUTTON_H)
+    
+    text = FONT.render('Run A*' , True , TEXT_COLOR)
     screen.blit(text, (horPos,verPos+10))
 
     # Clear Walls Program
@@ -207,15 +272,18 @@ while not done:
                 else: 
                     if ver == 3:
                         grid.resetForReRun()
-                        found, ALERT_MESSAGE = run(grid)
+                        found, ALERT_MESSAGE = runDj(grid)
                         if found:
                             grid.setPath() 
                         elif found == False:
                             ALERT_MESSAGE = "No Path Found"
                         handleRunResult(grid, found)
                     elif ver == 4:
-                        grid.clearWalls()
+                        #FIXME: Change grid to A* algorithm 
+                        runAStar(grid)
                     elif ver == 5:
+                        grid.clearWalls()
+                    elif ver == 6:
                         grid.resetAll()
         elif event.type == pygame.MOUSEBUTTONUP:
             if current == "Wall":

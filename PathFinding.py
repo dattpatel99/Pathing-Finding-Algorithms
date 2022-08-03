@@ -5,7 +5,7 @@ from utils import Node
 '''Graph class for all grid related things'''
 class Graph():
 	def __init__(self, row, cols):
-		# NOTE: By default initialize as DK
+		# FIXME: By default initialize as DK
 		self._graph = self._initializeDK(row, cols)
 		self.source = None
 		self.destination = None
@@ -20,9 +20,8 @@ class Graph():
 			grid.append(temp)
 		return grid
 
-	# FIXME: Make init for A*
-	'''
-	def _initializeDK(self, row, col):
+	# FIXME: Find a way to initialize grid with Astar as per change in screen	
+	def _initializeAStar(self, row, col):
 		grid = []
 		for i in range(row):
 			temp = []
@@ -30,7 +29,6 @@ class Graph():
 				temp.append(DKNode(i, j, INFITY))
 			grid.append(temp)
 		return grid
-	'''
 	
 	# Setters
 	def setSource(self, row: int, col: int):

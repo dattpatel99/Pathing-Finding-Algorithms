@@ -1,5 +1,6 @@
-from utils import Node
-from constants import INFITY
+from node import Node
+from utils import checkNeighbour
+from constants import INFITY, ROW_COMB, COL_COMB, ROW, COL
 
 '''
 InShort == is node in shortest path?
@@ -33,3 +34,17 @@ class DKNode(Node) :
 	# Getters
 	def getDist(self)-> int:
 		return self.dist
+	
+	    # Behaviors
+	def findNeighbours(self, graph: list) -> list:
+		neighbours = []
+		for i in range(len(ROW_COMB)):
+			x_value = self.x + ROW_COMB[i]
+			y_value = self.y + COL_COMB[i]
+			if (x_value < 0 or x_value >= ROW) or (y_value < 0 or y_value >= COL):
+				pass
+			else:
+				possible_neigh = graph[x_value][y_value]
+				if (checkNeighbour(possible_neigh)):
+					neighbours.append(possible_neigh)
+		return neighbours

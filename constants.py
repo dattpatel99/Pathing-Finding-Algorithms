@@ -1,9 +1,14 @@
 import sys
 
 INFITY = sys.maxsize
+MX_FLT = sys.float_info.max
+
+# For DK
 ROW_COMB = [0, 0, 1, -1]
 COL_COMB = [1, -1, 0, 0]
-
+# For AStar
+ROW_A_COMB = [0,0,1,-1,1,1,-1,-1]
+COL_A_COMB = [1,-1,0,0,1,-1,1,-1]
 # Colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
