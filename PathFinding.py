@@ -1,88 +1,18 @@
-
-from time import sleep
-from constants import INFITY, ROW_COMB, COL_COMB, ROW, COL
-'''
-Node class to hold each cells data
-'''
-class Node():
-	def __init__(self,posx: int,posy: int, value: int):
-		self.x = posx
-		self.y = posy
-		self.dist = value
-		self.visited = False
-		self.previousNode = None
-		self.type = None
-		self.inShort = False	
-
-	# Reset the node attributes
-	def reset(self):
-		self.dist = INFITY
-		self.visited = False
-		self.previousNode = None
-		self.type = None
-		self.inShort = None
-	
-	# Reset for rerun
-	def resetReRun(self):
-		self.dist = INFITY
-		self.visited = False
-		self.previousNode = None
-		self.inShort = None
-	
-	# Setters
-	def setType(self, newType):
-		self.type = newType
-	def setVisited(self):
-		self.visited = True
-	def setDist(self, val: int):
-		self.dist = val	
-	def setPrev(self, prev):
-		self.previousNode = prev
-	def setInShort(self):
-		self.inShort = True
-	
-	# Getters
-	def getType(self):
-		return self.type
-	def getVisited(self) -> bool:
-		return self.visited
-	def getDist(self)-> int:
-		return self.dist
-	def getPrev(self):
-		return self.previousNode
-	def getInShort(self):
-		return self.inShort
-	def getPosition(self) -> str:
-		return "(" + str(self.x) + "," + str(self.y) + ")"
-	
-	# Behaviors
-	def findNeighbours(self, graph: list) -> list:
-		neighbours = []
-		for i in range(len(ROW_COMB)):
-			x_value = self.x + ROW_COMB[i]
-			y_value = self.y + COL_COMB[i]
-			if (x_value < 0 or x_value >= ROW) or (y_value < 0 or y_value >= COL):
-				pass
-			else:
-				possible_neigh = graph[x_value][y_value]
-				if possible_neigh.getType() != "Wall" and possible_neigh.getVisited() != True:
-					neighbours.append(possible_neigh)
-		return neighbours
-
+from node import Node
 '''Graph class for all grid related things'''
-class Graph():
+class Game():
 	def __init__(self, row, cols):
-		self._graph = self._initializeNodes(row, cols)
+		self._grid = self._initialize(row, cols)
 		self.source = None
 		self.destination = None
 
 	# Initialize as nodes
-	def _initializeNodes(self, row, col):
+	def _initialize(self, row, col):
 		grid = []
 		for i in range(row):
 			temp = []
 			for j in range(col):
-				temp.append(Node(i, j, INFITY))
+				temp.append(Node(i, j))
 			grid.append(temp)
 		return grid
 	
@@ -92,7 +22,7 @@ class Graph():
 	def setDestination(self, row: int, col: int):
 		self.destination = (self.getGraph()[row][col])
 	def setDist(self, row, col, val):
-		(self.getGraph()[row][col]).setDist(val)
+		(self.getGraph()[row][col]).setDistance(val)
 	def setType(self, row, col, type):
 		(self.getGraph()[row][col]).setType(type)
 
@@ -102,9 +32,11 @@ class Graph():
 	def getDestination(self) -> Node:
 		return self.destination
 	def getGraph(self):
-		return self._graph
+		return self._grid
+	def getVisited(self, row, col):
+		return (self.getGraph()[row][col]).getVisited()
 	def getDist(self, row, col) -> int:
-		return (self.getGraph()[row][col]).getDist()
+		return (self.getGraph()[row][col]).getDistance()
 	def getType(self, row, col) -> int:
 		return (self.getGraph()[row][col]).getType()
 	def getInShort(self, row, col):
@@ -124,21 +56,23 @@ class Graph():
 				prev.setInShort()
 			prev = prev.getPrev()
 	
+	# Reset whole game map
 	def resetAll(self):
 		self.resetSource()
 		self.resetDestination()
-		for row in self._graph:
+		for row in self.getGraph():
 			for eachNode in row:
 				eachNode.reset()
 	
 	def clearWalls(self):
-		for row in self._graph:
+		for row in self.getGraph():
 			for eachNode in row:
 				if eachNode.getType() == "Wall":
 					eachNode.reset()
 	
+	# Reset game to rerun with different walls or positions
 	def resetForReRun(self):
-		for row in self._graph:
+		for row in self.getGraph():
 			for eachNode in row:
 				eachNode.resetReRun()
 
