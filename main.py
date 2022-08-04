@@ -43,7 +43,7 @@ done = False
 clock = pygame.time.Clock()
 
 def runAStar(graph: Graph):
-    open_list = list
+    open_list = []
     source = graph.getSource()
     # Check for source block
     if source == None:
@@ -56,15 +56,17 @@ def runAStar(graph: Graph):
 
     # Init the source block values    
     initAStarSource(source)
-    open_list.insert(source)
+    open_list.append(source)
     reached = False
 
     # Algo loop
-    while open_list.length() != 0:
+    while len(open_list) != 0:
         cur_node = open_list.pop(0)
         neigh = cur_node.findNeighbours(graph)
         cur_node.setVisited()
         for each in neigh:
+            # FIXME: REMOVE THIS BY FINDING BETTER SOLTUION
+            each.setDist(1)
             if each == destination:
                 reached = True
                 each.setPrev(cur_node)
@@ -74,7 +76,7 @@ def runAStar(graph: Graph):
                 hNew = caluclateH(each, destination)
                 fNew = caluclateF(gNew,hNew)
                 if (each not in open_list):
-                    open_list = aStarInsertionSort(open_list, each)
+                    open_list = aStarInsertionSort(open_list, each, fNew)
                     each.setPrev(cur_node)
                     each.setG(gNew)
                     each.setH(hNew)
@@ -278,9 +280,13 @@ while not done:
                         elif found == False:
                             ALERT_MESSAGE = "No Path Found"
                         handleRunResult(grid, found)
-                    elif ver == 4:
-                        #FIXME: Change grid to A* algorithm 
-                        runAStar(grid)
+                    elif ver == 4: 
+                        found, ALERT_MESSAGE = runAStar(grid)
+                        if found:
+                            grid.setPath() 
+                        elif found == False:
+                            ALERT_MESSAGE = "No Path Found"
+                        handleRunResult(grid, found)
                     elif ver == 5:
                         grid.clearWalls()
                     elif ver == 6:

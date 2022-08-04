@@ -1,3 +1,4 @@
+from AStar import Astar
 from constants import INFITY
 from DkAlgo import DKNode
 from utils import Node
@@ -6,19 +7,19 @@ from utils import Node
 class Graph():
 	def __init__(self, row, cols):
 		# FIXME: By default initialize as DK
-		self._graph = self._initializeDK(row, cols)
+		self._graph = self._initializeAStar(row, cols)
 		self.source = None
 		self.destination = None
 
-	# Initialize as nodes
-	def _initializeDK(self, row, col):
-		grid = []
-		for i in range(row):
-			temp = []
-			for j in range(col):
-				temp.append(DKNode(i, j, INFITY))
-			grid.append(temp)
-		return grid
+	# # Initialize as nodes
+	# def _initializeDK(self, row, col):
+	# 	grid = []
+	# 	for i in range(row):
+	# 		temp = []
+	# 		for j in range(col):
+	# 			temp.append(DKNode(i, j, INFITY))
+	# 		grid.append(temp)
+	# 	return grid
 
 	# FIXME: Find a way to initialize grid with Astar as per change in screen	
 	def _initializeAStar(self, row, col):
@@ -26,7 +27,7 @@ class Graph():
 		for i in range(row):
 			temp = []
 			for j in range(col):
-				temp.append(DKNode(i, j, INFITY))
+				temp.append(Astar(i, j))
 			grid.append(temp)
 		return grid
 	

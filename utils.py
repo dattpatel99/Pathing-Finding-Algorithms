@@ -2,16 +2,14 @@ import pygame
 from constants import ROW_COMB, COL_COMB, ROW, COL
 from node import Node
 
-def aStarInsertionSort(ls: list, node):
-    ls.append(node)
-    # Traverse through 1 to len(arr)
-    i = len(ls)-1
-    key = ls[i]
-    j = i-1
-    while j >= 0 and key.getF() < ls[j].getF():
-        ls[j + 1] = ls[j]
-        j -= 1
-    ls[j + 1] = key
+def aStarInsertionSort(ls: list, node, fNew):
+    c = 0
+    for each in ls:
+        if each.getF() < fNew:
+            c+=1
+        else:
+            break
+    ls.insert(c, node)
     return ls
 
 def drawRect(screen, color, startPosHor, startPosVer, horizontalWidth, verticalHeight):
