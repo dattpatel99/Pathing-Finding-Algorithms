@@ -9,7 +9,6 @@
  Explanation video: http://youtu.be/mdTeqiWyFnc
 """
 from utils import drawRect, aStarInsertionSort
-from util_astar import initiateAStarSource as initAStarSource
 from util_astar import caluclateF,caluclateG, caluclateH
 import pygame
 
@@ -17,7 +16,7 @@ from tkinter import *
 from tkinter import messagebox
 
 from constants import *
-from PathFinding import Graph, Queue
+from PathFinding import Game, Queue
 
 # Alert Message for User
 ALERT_MESSAGE = None
@@ -30,7 +29,7 @@ FONT = pygame.font.SysFont('Corbel',30)
 drag = False
 setStart = False
 setDestination = False 
-grid = Graph(ROW, COL)
+game = Game(ROW, COL)
 screen = pygame.display.set_mode(WINDOW_SIZE)
 
 # Set title of screen
@@ -42,7 +41,7 @@ done = False
 # Used to manage how fast the screen updates
 clock = pygame.time.Clock()
 
-def runAStar(graph: Graph):
+def runAStar(graph: Game):
     open_list = []
     source = graph.getSource()
     # Check for source block
@@ -55,18 +54,16 @@ def runAStar(graph: Graph):
         return None, "No Destination set"
 
     # Init the source block values    
-    initAStarSource(source)
+    source.initiateAStarSource()
     open_list.append(source)
     reached = False
 
     # Algo loop
     while len(open_list) != 0:
         cur_node = open_list.pop(0)
-        neigh = cur_node.findNeighbours(graph)
+        neigh = cur_node.findNeighboursAStar(graph)
         cur_node.setVisited()
         for each in neigh:
-            # FIXME: REMOVE THIS BY FINDING BETTER SOLTUION
-            each.setDist(1)
             if each == destination:
                 reached = True
                 each.setPrev(cur_node)
@@ -74,29 +71,28 @@ def runAStar(graph: Graph):
             else:
                 gNew = caluclateG(cur_node.getG())
                 hNew = caluclateH(each, destination)
-                fNew = caluclateF(gNew,hNew)
+                fNew = caluclateF(gNew, hNew)
                 if (each not in open_list):
                     open_list = aStarInsertionSort(open_list, each, fNew)
                     each.setPrev(cur_node)
                     each.setG(gNew)
                     each.setH(hNew)
-                    each.setF(fNew)
+                    each.setDistance(fNew)
                 else:
-                    if (fNew < each.getF()):
+                    if (fNew < each.getDistance()):
                         each.setPrev(cur_node)
                         each.setG(gNew)
                         each.setH(hNew)
-                        each.setF(fNew)
-                        each.setF(fNew)
+                        each.setDistance(fNew)
         # Show progress
-        drawGrid()
+        drawGrid(graph)
         pygame.display.flip()
         clock.tick(60)
         if reached:
             break
     return reached, "Path Found"
 
-def runDj(graph: Graph):
+def runDj(graph: Game):
     #qeue to hold list of nodes to check 
     nodes_check = Queue()
     source = graph.getSource()
@@ -118,7 +114,7 @@ def runDj(graph: Graph):
     # Dijkarta's Algo
     while nodes_check.length() != 0:
         cur_node = nodes_check.pop()
-        neighbours = cur_node.findNeighbours(graph.getGraph())
+        neighbours = cur_node.findNeighboursDJK(graph.getGraph())
         for each in neighbours:
             if each == destination:
                 reached = True
@@ -126,32 +122,35 @@ def runDj(graph: Graph):
                 break
             each.setPrev(cur_node)
             each.setVisited()
-            each.setDist(cur_node.getDist() + 1)
+            each.setDistance(cur_node.getDistance() + 1.0)
             nodes_check.insert(each)
         # Show progress
-        drawGrid()
+        drawGrid(graph)
         pygame.display.flip()
         clock.tick(60)
         if reached:
             break
     return reached, "Path Found"
 
-def handleRunResult(grid: Graph, result):
+def handleRunResult(grid: Game, result):
     if result == True:
-        grid.setPath
+        grid.setPath()
     else: 
         Tk().wm_withdraw()
         messagebox.showinfo("Alert Message", ALERT_MESSAGE)
         
-def drawGrid():
+def drawGrid(grid: Game):
     # Draw the grid
     for row in range(ROW):
         for column in range(COL):
-            val = grid.getDist(row, column)
             type = grid.getType(row, column)
+            visited = grid.getVisited(row, column)
             inShort = grid.getInShort(row, column)
             if not inShort:
-                if type == None and val == INFITY:
+                #INFO: None type means Open
+                if visited and type == "Open":
+                    color = BLUE
+                elif type == "Open":
                     color = WHITE
                 elif  type == "Wall":
                     color = BLACK
@@ -159,8 +158,6 @@ def drawGrid():
                     color = RED
                 elif type == "Source":
                     color = GREEN
-                else:
-                    color = BLUE
             else:
                 color = MAIN_PATH
             drawRect(screen, color, (MARGIN + WIDTH) * column + MARGIN, (MARGIN + HEIGHT) * row + MARGIN, WIDTH, HEIGHT)
@@ -211,30 +208,30 @@ def drawButtons():
     
     text = FONT.render('Reset Program' , True , TEXT_COLOR)
     screen.blit(text, (horPos,verPos+10))
-
-def handleWalls(gridType, gridVal):
-    if gridVal == -1 and gridType == "Wall":
+# Handle Wall creation/deletion
+def handleWalls(grid: Game, gridType: str, row:int, column:int):
+    if gridType == "Wall":
         grid.setDist(row,column,wordToNumber["Open"])
-        grid.setType(row, column, None)
-    elif gridVal == INFITY and gridType == None:
+        grid.setType(row, column, "Open")
+    elif gridType == "Open":
         grid.setDist(row,column, wordToNumber[current])
         grid.setType(row, column, "Wall")
-
-def handleDestination(gridType, gridVal):
+# Handle Destination creation/deletion
+def handleDestination(grid: Game, gridType: str, row:int, column:int):
     if gridType == "Destination" and grid.getDestination() != None:
         grid.resetDestination()
-        grid.setDist(row,column, wordToNumber["Open"]) 
-        grid.setType(row, column, None)                    
-    elif gridVal == INFITY and grid.getDestination() == None:
+        grid.setDist(row,column, wordToNumber["Open"])
+        grid.setType(row, column, "Open")                    
+    elif gridType == "Open" and grid.getDestination() == None:
         grid.setDestination(row, column)
         grid.setType(row, column, "Destination")
-
-def handleStart(gridVal):
-    if gridVal == 0 and grid.getSource() != None:
+# Handle Source creation/deletion
+def handleStart(grid:Game, gridType: str, row:int, column:int):
+    if gridType == "Source" and grid.getSource() != None:
         grid.setDist(row,column, wordToNumber["Open"]) 
         grid.resetSource()
-        grid.setType(row, column, None)
-    elif gridVal == INFITY and grid.getSource() == None:
+        grid.setType(row, column, "Open")
+    elif gridType == "Open" and grid.getSource() == None:
         grid.setDist(row,column, wordToNumber[current])
         grid.setSource(row, column)
         grid.setType(row, column, "Source")
@@ -252,57 +249,53 @@ while not done:
         if event.type == pygame.QUIT:  # If user clicked close
             done = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            # If in grid
+            # Inside Game Screen
             if row <= int(ROW-1) and column <= int(COL-1):
-                gridVal = grid.getDist(row,column)
-                gridType = grid.getType(row, column)
-                # Handles start button and grid events
+                blockType = game.getType(row, column)
                 if current == "Start":
-                    handleStart(gridVal)
-                # Handles destination button and grid events
+                    handleStart(grid=game,gridType=blockType, row=row, column=column)
                 elif current == "Destination":
-                   handleDestination(gridType, gridVal)
-                # Handles wall grid events
+                   handleDestination(grid=game,gridType=blockType, row=row, column=column)
                 elif current == "Wall":
                     drag = True
-                    handleWalls(gridType, gridVal)
-            # For buttons
+                    handleWalls(grid=game,gridType=blockType, row=row, column=column)
+            # Buttons
             else:
                 ver = (pos[1]) // (BUTTON_H + BUTTON_VER)
                 if ver < 3:
                     current = buttonList[ver]
                 else: 
                     if ver == 3:
-                        grid.resetForReRun()
-                        found, ALERT_MESSAGE = runDj(grid)
+                        game.resetForReRun()
+                        found, ALERT_MESSAGE = runDj(game)
                         if found:
-                            grid.setPath() 
+                            game.setPath() 
                         elif found == False:
                             ALERT_MESSAGE = "No Path Found"
-                        handleRunResult(grid, found)
-                    elif ver == 4: 
-                        found, ALERT_MESSAGE = runAStar(grid)
+                        handleRunResult(game, found)
+                    elif ver == 4:
+                        game.resetForReRun()
+                        found, ALERT_MESSAGE = runAStar(game)
                         if found:
-                            grid.setPath() 
+                            game.setPath() 
                         elif found == False:
                             ALERT_MESSAGE = "No Path Found"
-                        handleRunResult(grid, found)
+                        handleRunResult(game, found)
                     elif ver == 5:
-                        grid.clearWalls()
+                        game.clearWalls()
                     elif ver == 6:
-                        grid.resetAll()
+                        game.resetAll()
         elif event.type == pygame.MOUSEBUTTONUP:
             if current == "Wall":
                 drag = False
         elif event.type == pygame.MOUSEMOTION:
             if drag and current == "Wall":
                 if row <= int(ROW-1) and column <= int(COL-1):
-                    gridVal = grid.getDist(row,column)
-                    gridType = grid.getType(row, column)
-                    handleWalls(gridType, gridVal)
+                    blockType = game.getType(row, column)
+                    handleWalls(grid=game,gridType=blockType, row=row, column=column)
             
     screen.fill(BACKGRUOND)
-    drawGrid()
+    drawGrid(game)
     drawButtons()
     # Limit to 60 frames per second
     clock.tick(60)

@@ -1,33 +1,18 @@
-from AStar import Astar
-from constants import INFITY
-from DkAlgo import DKNode
-from utils import Node
-
+from node import Node
 '''Graph class for all grid related things'''
-class Graph():
+class Game():
 	def __init__(self, row, cols):
-		# FIXME: By default initialize as DK
-		self._graph = self._initializeAStar(row, cols)
+		self._grid = self._initialize(row, cols)
 		self.source = None
 		self.destination = None
 
-	# # Initialize as nodes
-	# def _initializeDK(self, row, col):
-	# 	grid = []
-	# 	for i in range(row):
-	# 		temp = []
-	# 		for j in range(col):
-	# 			temp.append(DKNode(i, j, INFITY))
-	# 		grid.append(temp)
-	# 	return grid
-
-	# FIXME: Find a way to initialize grid with Astar as per change in screen	
-	def _initializeAStar(self, row, col):
+	# Initialize as nodes
+	def _initialize(self, row, col):
 		grid = []
 		for i in range(row):
 			temp = []
 			for j in range(col):
-				temp.append(Astar(i, j))
+				temp.append(Node(i, j))
 			grid.append(temp)
 		return grid
 	
@@ -37,7 +22,7 @@ class Graph():
 	def setDestination(self, row: int, col: int):
 		self.destination = (self.getGraph()[row][col])
 	def setDist(self, row, col, val):
-		(self.getGraph()[row][col]).setDist(val)
+		(self.getGraph()[row][col]).setDistance(val)
 	def setType(self, row, col, type):
 		(self.getGraph()[row][col]).setType(type)
 
@@ -47,9 +32,11 @@ class Graph():
 	def getDestination(self) -> Node:
 		return self.destination
 	def getGraph(self):
-		return self._graph
+		return self._grid
+	def getVisited(self, row, col):
+		return (self.getGraph()[row][col]).getVisited()
 	def getDist(self, row, col) -> int:
-		return (self.getGraph()[row][col]).getDist()
+		return (self.getGraph()[row][col]).getDistance()
 	def getType(self, row, col) -> int:
 		return (self.getGraph()[row][col]).getType()
 	def getInShort(self, row, col):
@@ -69,21 +56,23 @@ class Graph():
 				prev.setInShort()
 			prev = prev.getPrev()
 	
+	# Reset whole game map
 	def resetAll(self):
 		self.resetSource()
 		self.resetDestination()
-		for row in self._graph:
+		for row in self.getGraph():
 			for eachNode in row:
 				eachNode.reset()
 	
 	def clearWalls(self):
-		for row in self._graph:
+		for row in self.getGraph():
 			for eachNode in row:
 				if eachNode.getType() == "Wall":
 					eachNode.reset()
 	
+	# Reset game to rerun with different walls or positions
 	def resetForReRun(self):
-		for row in self._graph:
+		for row in self.getGraph():
 			for eachNode in row:
 				eachNode.resetReRun()
 

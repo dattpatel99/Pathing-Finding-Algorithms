@@ -1,7 +1,6 @@
 import sys
 
-INFITY = sys.maxsize
-MX_FLT = sys.float_info.max
+MX_DIST = sys.float_info.max
 
 # For DK
 ROW_COMB = [0, 0, 1, -1]
@@ -35,7 +34,7 @@ HEIGHT = 20
 
 # Button Things
 buttonList = ["Start", "Wall", "Destination"]
-wordToNumber = {"Start": 0, "Wall": -1, "Destination": INFITY, "Run Dijsktra\'s": None, "Open": INFITY}
+wordToNumber = {"Start": 0, "Wall": -1, "Destination": MX_DIST, "Run Dijsktra\'s": None, "Open": MX_DIST}
 current = "Start"
 # Button Dimensions
 BUTTON_W = 200
