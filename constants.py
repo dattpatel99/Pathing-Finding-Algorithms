@@ -6,8 +6,8 @@ MX_DIST = sys.float_info.max
 ROW_COMB = [0, 0, 1, -1]
 COL_COMB = [1, -1, 0, 0]
 # For AStar
-ROW_A_COMB = [0,0,1,-1,1,1,-1,-1]
-COL_A_COMB = [1,-1,0,0,1,-1,1,-1]
+ROW_A_COMB = [0, 0, 1, -1]
+COL_A_COMB = [1, -1, 0, 0]
 # Colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
